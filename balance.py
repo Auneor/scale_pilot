@@ -51,6 +51,8 @@ class ScaleConnection:
             self.sock.sendall(message.encode("utf-8"))
             data = self.sock.recv(1024)  # Receive up to 1024 bytes
             result = data.decode("utf-8")
+        except Exception as e:
+            print("Exception caught:", e)
         finally:
             if self.sock:
                 self.sock.close()
@@ -74,8 +76,8 @@ class ScaleConnection:
                 if "S S" in data:
                     print("we received: ", data)
                     self.parse_weight(data)
-        except:
-            pass
+        except Exception as e:
+            print("Exception caught:", e)
         finally:
             if self.sock:
                 self.sock.close()
