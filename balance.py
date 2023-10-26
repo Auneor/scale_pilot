@@ -39,6 +39,7 @@ class ScaleConnection:
             self.interrupt()
         if command == "SRU":
             return self._send_sru()
+        result = ""
         try:
             now = datetime.datetime.now()
             if (now - self.last_call).total_seconds() < 0.1:
@@ -49,12 +50,13 @@ class ScaleConnection:
             message = command + "\n"
             self.sock.sendall(message.encode("utf-8"))
             data = self.sock.recv(1024)  # Receive up to 1024 bytes
+            result = data.decode("utf-8")
         finally:
             if self.sock:
                 self.sock.close()
                 self.sock = False
             self.last_call = datetime.datetime.now()
-        return data.decode("utf-8")
+        return result
 
     def _send_sru(self):
         try:
@@ -104,14 +106,19 @@ class ScaleConnection:
     def reset_tare(self):
         tare = self._send_msg("TAC")
         print("result for reset is ", tare)
+        return tare
 
     def tare(self):
         tare = self._send_msg("T")
         print("tare result is ", tare)
+        return tare
 
     def weight(self):
         weight = self._send_msg("S")
-        return self.parse_weight(weight)
+        if weight:
+            return self.parse_weight(weight)
+        else:
+            return ""
 
 
 scale = ScaleConnection(ip_address)
@@ -120,7 +127,8 @@ scale = ScaleConnection(ip_address)
 @app.route("/get_weight", methods=["POST", "GET"])
 @cross_origin()
 def get_weight():
-    return {"weight": scale.weight()}
+    res = scale.weight()
+    return {"weight": res}
 
 
 @app.route("/tare", methods=["POST", "GET"])
