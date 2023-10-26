@@ -23,6 +23,13 @@ if len(sys.argv) > 1:
 else:
     print("No arguments provided.")
 
+dummy = False
+if len(sys.argv) > 2:
+    print(
+        "there is a lot of arguments, we start dummy mode (no connection to the scale)"
+    )
+    dummy = True
+
 
 class ScaleConnection:
     def __init__(self, ip_address, port=4305):
@@ -46,6 +53,7 @@ class ScaleConnection:
                 time.sleep(0.1)
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             server_address = (self.ip, self.port)
+            self.sock.settimeout(2)
             self.sock.connect(server_address)
             message = command + "\n"
             self.sock.sendall(message.encode("utf-8"))
@@ -67,6 +75,7 @@ class ScaleConnection:
                 time.sleep(0.1)
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             server_address = (self.ip, self.port)
+            self.sock.settimeout(2)
             self.sock.connect(server_address)
             message = "SRU\n"
             self.sock.sendall(message.encode("utf-8"))
@@ -87,9 +96,13 @@ class ScaleConnection:
 
     def interrupt(self):
         if self.sock:
-            self.sock.shutdown(socket.SHUT_RDWR)
-            self.sock.close()
-            self.sock = False
+            try:
+                self.sock.shutdown(socket.SHUT_RDWR)
+                self.sock.close()
+            except Exception as e:
+                print("Exception caught:", e)
+            finally:
+                self.sock = False
 
     def launch_sru(self):
         return self._send_sru()
