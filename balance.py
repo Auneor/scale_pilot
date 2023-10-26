@@ -194,6 +194,30 @@ def launch_continuous():
     return {"ok": "STARTED"}
 
 
+def new_data_available():
+    rr = random.random()
+    if rr < 0.01:
+        return rr
+    else:
+        return False
+
+
+@app.route("/long_polling", methods=["GET"])
+def long_polling():
+    timeout = 300  # Timeout value in seconds
+    start_time = time.time()
+
+    while time.time() - start_time < timeout:
+        # Check for new data
+        newd = new_data_available()
+        if newd:
+            return {"message": "New data available! {}".format(newd)}
+
+        time.sleep(1)  # Wait for 1 second before checking again
+
+    return {"message": "Timeout occurred. No new data available."}
+
+
 @app.route("/stop_continuous", methods=["POST", "GET"])
 def stop_continuous():
     if dummy:
