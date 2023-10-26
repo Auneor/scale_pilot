@@ -107,6 +107,16 @@ class ScaleConnection:
     def launch_sru(self):
         return self._send_sru()
 
+    def launch_dummy(self):
+        self.go = True
+        while self.go:
+            time.sleep(random.randint(1, 10))
+            print("we have weight: ", random.random())
+
+    def interrupt_dummy(self):
+        print("we interrupt dummy")
+        self.go = False
+
     def parse_weight(self, weight):
         match = re.search(r"(\d+\.\d+)\s+(\w+)", weight)
         if match:
@@ -142,17 +152,23 @@ scale = ScaleConnection(ip_address)
 @app.route("/get_weight", methods=["POST", "GET"])
 @cross_origin()
 def get_weight():
+    if dummy:
+        return {"weight": random.random()}
     res = scale.weight()
     return {"weight": res}
 
 
 @app.route("/tare", methods=["POST", "GET"])
 def tare():
+    if dummy:
+        return {"ok": "OK"}
     return {"ok": scale.tare()}
 
 
 @app.route("/reset_tare", methods=["POST", "GET"])
 def reset_tare():
+    if dummy:
+        return {"ok": "OK"}
     return {"ok": scale.reset_tare()}
 
 
@@ -165,6 +181,12 @@ def get_continuous():
 
 @app.route("/launch_continuous", methods=["POST", "GET"])
 def launch_continuous():
+    if dummy:
+        thread = threading.Thread(name="interval_query", target=scale.launch_dummy)
+        thread.setDaemon(True)
+        thread.start()
+        return {"ok": "STARTED"}
+
     if not scale.sock:
         thread = threading.Thread(name="interval_query", target=scale.launch_sru)
         thread.setDaemon(True)
@@ -174,6 +196,9 @@ def launch_continuous():
 
 @app.route("/stop_continuous", methods=["POST", "GET"])
 def stop_continuous():
+    if dummy:
+        scale.interrupt_dummy()
+        return {"ok": "INTERUPTED"}
     scale.interrupt()
     return {"ok": "INTERUPTED"}
 
