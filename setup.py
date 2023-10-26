@@ -89,7 +89,7 @@ def install_scale_program():
     print("Systemd unit created and enabled.")
 
 
-subprocess.run(["pip3", "install", "flask-cors"])
+subprocess.run(["pip3", "install", "flask-cors", "--break-system-packages"])
 
 install()
 install_scale_program()
