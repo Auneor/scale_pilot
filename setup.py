@@ -53,7 +53,7 @@ iface eth0 inet static
                 i_file, interface_file
             )
         )
-    return ipget
+    return res
 
 
 def install_scale_program(ipscale):
