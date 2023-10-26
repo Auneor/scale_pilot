@@ -75,8 +75,8 @@ def install_scale_program():
     After=network.target
 
     [Service]
-    ExecStartPre=/usr/bin/git -C /pilot/scale_pilot pull
-    ExecStart=/usr/bin/python3 {directory}/scale_pilot/balance.py
+    ExecStartPre=/usr/bin/git -C /pilot pull
+    ExecStart=/usr/bin/python3 {directory}/balance.py
 
     [Install]
     WantedBy=multi-user.target
@@ -88,6 +88,8 @@ def install_scale_program():
     subprocess.run(["systemctl", "enable", "pilot.service"])
     print("Systemd unit created and enabled.")
 
+
+subprocess.run(["pip3", "install", "flask-cors"])
 
 install()
 install_scale_program()
