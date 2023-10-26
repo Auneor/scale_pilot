@@ -1,5 +1,6 @@
 # flask --app balance run
 from flask import Flask
+import sys
 import random
 from flask_cors import CORS, cross_origin
 import threading
@@ -15,9 +16,20 @@ cors = CORS(app)
 app.config["CORS_HEADERS"] = "Content-Type"
 
 
+ip_address = False
+if len(sys.argv) > 1:
+    ip_address = sys.argv[1]
+    print("ip address:", ip_address)
+else:
+    print("No arguments provided.")
+
+
 class ScaleConnection:
-    def __init__(self, ip="192.168.55.29", port=4305):
-        self.ip = ip
+    def __init__(self, ip_address, port=4305):
+        if not ip_address:
+            ip_address = "192.168.55.29"
+        print("ip is ", ip_address)
+        self.ip = ip_address
         self.port = port
         self.last_call = datetime.datetime.now()
         self.sock = False
@@ -102,7 +114,7 @@ class ScaleConnection:
         return self.parse_weight(weight)
 
 
-scale = ScaleConnection()
+scale = ScaleConnection(ip_address)
 
 
 @app.route("/get_weight", methods=["POST", "GET"])

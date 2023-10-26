@@ -53,9 +53,10 @@ iface eth0 inet static
                 i_file, interface_file
             )
         )
+    return ipget
 
 
-def install_scale_program():
+def install_scale_program(ipscale):
     directory = "/pilot"
     repository_url = "https://github.com/Auneor/scale_pilot.git"
 
@@ -75,7 +76,7 @@ def install_scale_program():
     After=network.target
 
     [Service]
-    ExecStart=/usr/bin/python3 {directory}/balance.py
+    ExecStart=/usr/bin/python3 {directory}/balance.py {ipscale}
 
     [Install]
     WantedBy=multi-user.target
@@ -90,5 +91,5 @@ def install_scale_program():
 
 subprocess.run(["apt", "install", "-y", "python3-flask-cors"])
 
-install()
-install_scale_program()
+ipscale = install()
+install_scale_program(ipscale)
