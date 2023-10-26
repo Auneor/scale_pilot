@@ -40,6 +40,7 @@ class ScaleConnection:
         self.port = port
         self.last_call = datetime.datetime.now()
         self.sock = False
+        self.new_value = False
 
     def _send_msg(self, command):
         if self.sock:
@@ -60,7 +61,7 @@ class ScaleConnection:
             data = self.sock.recv(1024)  # Receive up to 1024 bytes
             result = data.decode("utf-8")
         except Exception as e:
-            print("Exception caught:", e)
+            print("send_msg: Exception caught:", e)
         finally:
             if self.sock:
                 self.sock.close()
@@ -75,7 +76,6 @@ class ScaleConnection:
                 time.sleep(0.1)
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             server_address = (self.ip, self.port)
-            self.sock.settimeout(2)
             self.sock.connect(server_address)
             message = "SRU\n"
             self.sock.sendall(message.encode("utf-8"))
@@ -84,9 +84,11 @@ class ScaleConnection:
                 data = data.decode("utf-8")
                 if "S S" in data:
                     print("we received: ", data)
-                    self.parse_weight(data)
+                    weight = self.parse_weight(data)
+                    if abs(weight) > 0.4:
+                        self.new_value = self.parse_weight(data)
         except Exception as e:
-            print("Exception caught:", e)
+            print("send_sru: Exception caught:", e)
         finally:
             if self.sock:
                 self.sock.close()
@@ -100,7 +102,7 @@ class ScaleConnection:
                 self.sock.shutdown(socket.SHUT_RDWR)
                 self.sock.close()
             except Exception as e:
-                print("Exception caught:", e)
+                print("interrupt: Exception caught:", e)
             finally:
                 self.sock = False
 
@@ -111,7 +113,9 @@ class ScaleConnection:
         self.go = True
         while self.go:
             time.sleep(random.randint(1, 10))
-            print("we have weight: ", random.random())
+            we = random.random()
+            print("we have weight: ", we)
+            self.new_value = we
 
     def interrupt_dummy(self):
         print("we interrupt dummy")
@@ -194,14 +198,6 @@ def launch_continuous():
     return {"ok": "STARTED"}
 
 
-def new_data_available():
-    rr = random.random()
-    if rr < 0.01:
-        return rr
-    else:
-        return False
-
-
 @app.route("/long_polling", methods=["GET"])
 def long_polling():
     timeout = 300  # Timeout value in seconds
@@ -209,11 +205,12 @@ def long_polling():
 
     while time.time() - start_time < timeout:
         # Check for new data
-        newd = new_data_available()
-        if newd:
-            return {"message": "New data available! {}".format(newd)}
+        if scale.new_value:
+            nv = scale.new_value
+            scale.new_value = False
+            return {"weight": nv}
 
-        time.sleep(1)  # Wait for 1 second before checking again
+        time.sleep(0.4)  # Wait for 1 second before checking again
 
     return {"message": "Timeout occurred. No new data available."}
 
