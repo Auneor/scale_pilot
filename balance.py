@@ -176,13 +176,6 @@ def reset_tare():
     return {"ok": scale.reset_tare()}
 
 
-@app.route("/get_continuous", methods=["POST", "GET"])
-def get_continuous():
-    if not scale.sock:
-        print("bizzare")
-    return {"new": False}
-
-
 @app.route("/launch_continuous", methods=["POST", "GET"])
 def launch_continuous():
     if dummy:
@@ -238,7 +231,7 @@ def doc():
     </li><li>
     <a href="/launch_continuous">/launch_continuous: Lancer sans arret</a>
     </li><li>
-    <a href="/get_continuous">/get_continuous: verifie si nouvelle valeur</a>
+    <a href="/long_polling">/long_polling: longpolling qui renvoie quand nouvelle valeur</a>
     </li><li>
     <a href="/stop_continuous">/stop_continuous: STOP</a>
     </li>
