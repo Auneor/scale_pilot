@@ -15,7 +15,7 @@ app = Flask(__name__)
 cors = CORS(app)
 app.config["CORS_HEADERS"] = "Content-Type"
 
-
+last_weights=[]
 ip_address = False
 if len(sys.argv) > 1:
     ip_address = sys.argv[1]
@@ -111,11 +111,12 @@ class ScaleConnection:
 
     def launch_dummy(self):
         self.go = True
+        time.sleep(random.randint(1, 10))
         while self.go:
-            time.sleep(random.randint(1, 10))
             we = random.random()
             print("we have weight: ", we)
             self.new_value = we
+            time.sleep(random.randint(1, 10))
 
     def interrupt_dummy(self):
         print("we interrupt dummy")
@@ -157,8 +158,10 @@ scale = ScaleConnection(ip_address)
 @cross_origin()
 def get_weight():
     if dummy:
-        return {"weight": random.random()}
-    res = scale.weight()
+        res=random.random()
+    else:
+        res = scale.weight()
+    last_weights.append({"time": datetime.datetime.now(), "weight": res})
     return {"weight": res}
 
 
@@ -201,6 +204,7 @@ def long_polling():
         if scale.new_value:
             nv = scale.new_value
             scale.new_value = False
+            last_weights.append({"time": datetime.datetime.now(), "weight": nv})
             return {"weight": nv}
 
         time.sleep(0.4)  # Wait for 1 second before checking again
@@ -216,9 +220,18 @@ def stop_continuous():
     scale.interrupt()
     return {"ok": "INTERUPTED"}
 
+@app.route("/reset_history", methods=["POST", "GET"])
+def reset_history():
+    last_weights=[]
+    return {"ok": "Reset"}
+    
 
 @app.route("/")
 def doc():
+    weights="<ul>"
+    for w in reversed(last_weights):
+        weights+="<li>{} - {} g</li>".format(w["time"].strftime("%d/%m/%Y %H:%M:%S"), w["weight"])
+    weights+="</ul>"
     return """
     <html>
     <ul>
@@ -236,8 +249,12 @@ def doc():
     <a href="/stop_continuous">/stop_continuous: STOP</a>
     </li>
     </ul>
+    <br />
+    <br />
+    Pesées de cette session:
+    {}
     </html>
-    """
+    """.format(weights)
 
 
 if __name__ == "__main__":
