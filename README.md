@@ -16,3 +16,8 @@ To run manually the scale in test mode with no scale connected:
 ``` 
 python3 balance.py dummy dummy
 ``` 
+
+To search for live devices on network 192.168.55.X just type 
+``` 
+python3 scan_network_192-168-55.py
+``` 
