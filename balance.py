@@ -15,7 +15,7 @@ app = Flask(__name__)
 cors = CORS(app)
 app.config["CORS_HEADERS"] = "Content-Type"
 
-last_weights=[]
+last_weights = []
 ip_address = False
 if len(sys.argv) > 1:
     ip_address = sys.argv[1]
@@ -146,7 +146,10 @@ class ScaleConnection:
     def weight(self):
         weight = self._send_msg("S")
         if weight:
-            return self.parse_weight(weight)
+            result = self.parse_weight(weight)
+            if not result:
+                result = 0
+            return result
         else:
             return ""
 
@@ -158,7 +161,7 @@ scale = ScaleConnection(ip_address)
 @cross_origin()
 def get_weight():
     if dummy:
-        res=random.random()
+        res = random.random()
     else:
         res = scale.weight()
     last_weights.append({"time": datetime.datetime.now(), "weight": res})
@@ -220,18 +223,21 @@ def stop_continuous():
     scale.interrupt()
     return {"ok": "INTERUPTED"}
 
+
 @app.route("/reset_history", methods=["POST", "GET"])
 def reset_history():
-    last_weights=[]
+    last_weights = []
     return {"ok": "Reset"}
-    
+
 
 @app.route("/")
 def doc():
-    weights="<ul>"
+    weights = "<ul>"
     for w in reversed(last_weights):
-        weights+="<li>{} - {} g</li>".format(w["time"].strftime("%d/%m/%Y %H:%M:%S"), w["weight"])
-    weights+="</ul>"
+        weights += "<li>{} - {} g</li>".format(
+            w["time"].strftime("%d/%m/%Y %H:%M:%S"), w["weight"]
+        )
+    weights += "</ul>"
     return """
     <html>
     <ul>
@@ -254,7 +260,9 @@ def doc():
     Pesées de cette session:
     {}
     </html>
-    """.format(weights)
+    """.format(
+        weights
+    )
 
 
 if __name__ == "__main__":
