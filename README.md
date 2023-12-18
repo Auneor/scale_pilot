@@ -7,6 +7,15 @@ curl -O https://raw.githubusercontent.com/Auneor/scale_pilot/main/setup.py
 python3 setup.py
 ``` 
 
+
+to install this pilot without network configuring, just do
+
+``` 
+sudo su
+curl -O https://raw.githubusercontent.com/Auneor/scale_pilot/main/setup_networkless.py 
+python3 setup.py
+``` 
+
 To run manually the scale, 
 ``` 
 python3 balance.py 192.2.22.34 # the ip should be the ip of the scale
